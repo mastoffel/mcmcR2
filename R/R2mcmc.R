@@ -55,6 +55,6 @@ R2mcmc <- function(mod, type = "marginal", family = "gaussian"){
     #posterior.mode(R2m)
     #data.frame(HPDinterval(R2m), row.names = NULL)
 
-    out <- list("partR2" = data.frame("meanR2" = mean(R2m), "modeR2" =  posterior.mode(R2m), data.frame(HPDinterval(R2m)), row.names = NULL),
+    out <- list("partR2" = data.frame("meanR2" = mean(R2m),"medianR2" = median(R2m), "modeR2" =  posterior.mode(R2m), data.frame(HPDinterval(R2m)), row.names = NULL),
         "R2_chain" = outR2m)
 }

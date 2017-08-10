@@ -29,7 +29,7 @@
 #'           family=c("gaussian"),ginverse=list(tip_label=inv_phylo),prior=prior,
 #'           data=seal_data,nitt=1100,burnin=100,thin=10)
 #'
-#' out <- partR2(mod_gen, partvars = c("num_alleles_mean", "obs_het_mean", "prop_low_afs_mean"),
+#' out <- partR2(mod = mod_gen, partvars = c("num_alleles_mean", "obs_het_mean", "prop_low_afs_mean"),
 #'               data = seal_data, inv_phylo = inv_phylo, prior = prior, nitt = 1100,
 #'               burnin = 100, thin = 10)
 #'
@@ -47,7 +47,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = 
     chain_length <- nrow(mod$VCV)
 
     # calculate structure coefficients -----------------------------
-    partvar <- partvars[1]
+
     calc_struc_coef <- function(mcmc_iter, partvar, mod){
         out <- stats::cor(data[[partvar]], MCMCglmm::predict.MCMCglmm(mod, it = mcmc_iter))
         out
@@ -55,7 +55,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = 
     calc_struc_coef_full <- function(partvar, mod){
         all_coef <- sapply(1:chain_length, calc_struc_coef,  partvar, mod)
         class(all_coef) <- "mcmc"
-        out <- data.frame("pred" = partvar, modeSC = MCMCglmm::posterior.mode(all_coef), HPDinterval(all_coef))
+        out <- data.frame("pred" = partvar, modeSC = MCMCglmm::posterior.mode(all_coef), medianSC = stats::median(all_coef), HPDinterval(all_coef))
         row.names(out) <- NULL
         out
     }
@@ -89,19 +89,19 @@ partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = 
             data=data,nitt=nitt,burnin=burnin,thin=thin)
 
         R2_red <- R2mcmc(mod_red)
-        # R2 mode
-        R2_diff <- R2_full$partR2$modeR2 - R2_red$partR2$modeR2
+        # R2 mdedian
+        R2_diff <- R2_full$partR2$medianR2 - R2_red$partR2$medianR2
         # R2 CI
         R2_diff_vec <- calc_CI(R2_full$R2_chain - R2_red$R2_chain)
-        out <- c("R2mode" = R2_diff, "CIlow" = R2_diff_vec[1], "CIhigh" = R2_diff_vec[2])
+        out <- c("R2median" = R2_diff, "CIlow" = R2_diff_vec[1], "CIhigh" = R2_diff_vec[2])
     }
 
     R2_out <- as.data.frame(do.call(rbind, lapply(all_comb3, calc_partR2, R2_full, data)))
-    names(R2_out) <- c("modeR2", "lower", "upper")
+    names(R2_out) <- c("medianR2", "lower", "upper")
     # all_vars <- lapply(all_comb3, function(x) gsub('(a|e|i|o|u)', '', x))
     all_comb_names <- unlist(lapply(all_comb3, function(x) paste(x, collapse = " & ")))
     # get full model estimates
-    R2_full_mod <- data.frame("combinations" = "full model", R2_full$partR2[2:4]) # substract mean
+    R2_full_mod <- data.frame("combinations" = "full model", R2_full$partR2[c(2,4,5)]) # substract mean
 
     out <- rbind(R2_full_mod, data.frame("combinations" = all_comb_names, R2_out))
     out_full <- list("R2" = out, "SC" = all_SC)
