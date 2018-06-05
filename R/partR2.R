@@ -3,6 +3,7 @@
 #' @param mod MCMCglmm model
 #' @param partvars Predictors for the analysis
 #' @param data data frame
+#' @param type Either "marginal" or "conditional"
 #' @param inv_phylo inverse phylogenetic covariance matrix calcd by MCMCglmm::inverseA
 #' @param prior prior for MCMCglmm
 #' @param nitt Number of iterations
@@ -39,7 +40,7 @@
 
 
 # partition the R2 into variation unique and common to the predictors
-partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = NULL,
+partR2 <- function(mod, partvars = NULL, data = NULL, type = "marginal", inv_phylo = NULL, prior = NULL,
                     nitt=10000,burnin=1000, thin=50){
 
     if (is.null(partvars)) stop("partvars has to contain the variables for the commonality analysis")

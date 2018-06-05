@@ -52,7 +52,8 @@ R2mcmc <- function(mod, type = "marginal", family = "gaussian"){
     } else if (type == "conditional"){
         # Delete last column in VCV which contains residuals (observational level variance)
         R2m <- (vmVarF + rowSums(mod$VCV[, -ncol(mod$VCV), drop=FALSE]))/(vmVarF+ rowSums(mod$VCV))
-
+    } else {
+        stop("Type has to be either marginal or conditional")
     }
     outR2m <- R2m
     class(R2m) <- "mcmc"
