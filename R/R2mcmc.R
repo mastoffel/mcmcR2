@@ -36,14 +36,14 @@ R2mcmc <- function(mod, type = "marginal", family = "gaussian"){
     if (type != "marginal") stop("At the moment, there is just the marginal R2")
     if (family != "gaussian") stop("At the moment just gaussian errors are supported")
     # Shinichis answer on Researchgate
-    mVarF <- var(as.vector(apply(mod$Sol,2,mean) %*% t(as.matrix(mod$X))))
+    mVarF <- var(as.vector(apply(mod$Sol,2,mean) %*% t(as.matrix(mod$X))))  #t(as.matrix(mod$X))))
     R2 <- mVarF/(mVarF+sum(apply(mod$VCV,2,mean)))
 
     # alternative with crebile intervals
     mcmc_chain_length <- nrow(mod$VCV)
     vmVarF<-numeric(mcmc_chain_length)
 
-    vmVarF <- vapply(1:mcmc_chain_length, function(x) out <- var(as.vector(mod$Sol[x,] %*% t(as.matrix(mod$X)))),
+    vmVarF <- vapply(1:mcmc_chain_length, function(x) out <- var(as.vector(mod$Sol[x,] %*% t(as.matrix(mod$X)))), #t(as.matrix(mod$X))))
         FUN.VALUE = numeric(length(mcmc_chain_length)))
 
     R2m<-vmVarF/(vmVarF+ rowSums(mod$VCV)) # include here all random effects plus errors

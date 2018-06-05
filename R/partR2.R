@@ -24,12 +24,12 @@
 #' inv_phylo <- inverseA(seal_phylo, nodes="TIPS",scale=FALSE)$Ainv
 #' prior<-list(G=list(G1=list(V=1,nu=0.002)),R=list(V=1,nu=0.002))
 #'
-#' mod_gen <- MCMCglmm(TPM70_ratio ~ num_alleles_mean +  obs_het_mean + prop_low_afs_mean, #
+#' mod_gen <- MCMCglmm(TPM70_ratio ~ num_alleles_mean +  obs_het_mean, # prop_low_afs_mean,
 #'           random=~tip_label, nodes = "TIPS", #   rcov =~us(trait):units
 #'           family=c("gaussian"),ginverse=list(tip_label=inv_phylo),prior=prior,
 #'           data=seal_data,nitt=1100,burnin=100,thin=10)
 #'
-#' out <- partR2(mod = mod_gen, partvars = c("num_alleles_mean", "obs_het_mean", "prop_low_afs_mean"),
+#' out <- partR2(mod = mod_gen, partvars = c("num_alleles_mean", "obs_het_mean"),
 #'               data = seal_data, inv_phylo = inv_phylo, prior = prior, nitt = 1100,
 #'               burnin = 100, thin = 10)
 #'
@@ -49,13 +49,17 @@ partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = 
     # calculate structure coefficients -----------------------------
 
     calc_struc_coef <- function(mcmc_iter, partvar, mod){
-        out <- stats::cor(data[[partvar]], MCMCglmm::predict.MCMCglmm(mod, it = mcmc_iter))
+        resp <- MCMCglmm::predict.MCMCglmm(mod, it = mcmc_iter)
+        mod_mat <- as.matrix(mod$X)
+        pred <- grep(partvar, colnames(mod_mat))
+        out <- cor(resp,as.matrix(mod$X)[, pred])
+        #out <- sqrt(summary(lm(resp~data[[partvar]]))$r.squared) # should be correct but still to check
         out
     }
     calc_struc_coef_full <- function(partvar, mod){
         all_coef <- sapply(1:chain_length, calc_struc_coef,  partvar, mod)
         class(all_coef) <- "mcmc"
-        out <- data.frame("pred" = partvar, modeSC = MCMCglmm::posterior.mode(all_coef), medianSC = stats::median(all_coef), HPDinterval(all_coef))
+        out <- data.frame("pred" = partvar,  medianSC = stats::median(all_coef), HPDinterval(all_coef)) #modeSC = MCMCglmm::posterior.mode(all_coef),
         row.names(out) <- NULL
         out
     }
@@ -70,7 +74,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, inv_phylo = NULL, prior = 
     all_unique_R2 <- c()
     R2_full <- R2mcmc(mod)
 
-    all_comb <- lapply(1:(length(partvars)-1), function(x) combn(partvars, x))
+    all_comb <- lapply(1:(length(partvars)), function(x) combn(partvars, x)) # length(partvars - 1)
     all_comb2 <- lapply(all_comb, function(x) apply(x, 2, function(x) out <- list(x)))
     all_comb3 <- unlist(unlist(all_comb2, recursive = FALSE), recursive = FALSE)
 
