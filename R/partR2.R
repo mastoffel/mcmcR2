@@ -93,7 +93,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, type = "marginal", inv_phy
             family=c("gaussian"),ginverse=list(tip_label=inv_phylo),prior=prior,
             data=data,nitt=nitt,burnin=burnin,thin=thin)
 
-        R2_red <- R2mcmc(mod_red)
+        R2_red <- R2mcmc(mod_red, type = type)
         # R2 mdedian
         R2_diff <- R2_full$partR2$medianR2 - R2_red$partR2$medianR2
         # R2 CI
