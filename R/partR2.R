@@ -30,7 +30,7 @@
 #'           family=c("gaussian"),ginverse=list(tip_label=inv_phylo),prior=prior,
 #'           data=seal_data,nitt=1100,burnin=100,thin=10)
 #'
-#' out <- partR2(mod = mod_gen, partvars = c("num_alleles_mean", "obs_het_mean"),
+#' out <- partR2(mod = mod_gen, partvars = c("num_alleles_mean", "obs_het_mean"), type = "marginal",
 #'               data = seal_data, inv_phylo = inv_phylo, prior = prior, nitt = 1100,
 #'               burnin = 100, thin = 10)
 #'
@@ -73,7 +73,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, type = "marginal", inv_phy
 
     # just unique effects
     all_unique_R2 <- c()
-    R2_full <- R2mcmc(mod)
+    R2_full <- R2mcmc(mod, type)
 
     all_comb <- lapply(1:(length(partvars)), function(x) combn(partvars, x)) # length(partvars - 1)
     all_comb2 <- lapply(all_comb, function(x) apply(x, 2, function(x) out <- list(x)))
@@ -84,7 +84,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, type = "marginal", inv_phy
         out <- stats::quantile(x, c((1 - CI)/2, 1 - (1 - CI)/2), na.rm = TRUE)
     }
 
-    calc_partR2 <- function(var_to_red, R2_full, data) {
+    calc_partR2 <- function(var_to_red, R2_full, data, type) {
         to_del <- paste(paste("-", var_to_red, sep= ""), collapse = " ")
         new_formula <- update.formula(model_formula, paste(". ~ . ", to_del, sep=""))
 
@@ -101,7 +101,7 @@ partR2 <- function(mod, partvars = NULL, data = NULL, type = "marginal", inv_phy
         out <- c("R2median" = R2_diff, "CIlow" = R2_diff_vec[1], "CIhigh" = R2_diff_vec[2])
     }
 
-    R2_out <- as.data.frame(do.call(rbind, lapply(all_comb3, calc_partR2, R2_full, data)))
+    R2_out <- as.data.frame(do.call(rbind, lapply(all_comb3, calc_partR2, R2_full, data, type)))
     names(R2_out) <- c("medianR2", "lower", "upper")
     # all_vars <- lapply(all_comb3, function(x) gsub('(a|e|i|o|u)', '', x))
     all_comb_names <- unlist(lapply(all_comb3, function(x) paste(x, collapse = " & ")))
